@@ -176,6 +176,17 @@ def run_cross_validation(learning_rate, net_spec, batch_size, n_splits=10, lr_de
 
 
 def plot_figure(results, filename=None, show=False):
+    """
+    Processes the results list to plot figures for loss and accuracy metric, for each of the
+    splits in the kfold
+    Args:
+        results: list. Contains History objects
+        filename: string. If provided, the computed figure will be saved to this file
+        show: boolean. Specify whether the figure should be displayed
+
+    Returns:
+        None
+    """
 
     fig, axes = plt.subplots(2, 2, figsize=(10, 7), sharex=True)
     axes = axes.ravel()
