@@ -126,14 +126,35 @@ def get_model(n_categories, net_spec, learning_rate, steps_per_epoch, lr_decay_p
 
 def run_cross_validation(learning_rate, net_spec, batch_size, n_splits=10, lr_decay_period=5,
                          epochs=10, verbose=0, random_state=None, staircase=True):
+    """
+    This is the main method in the pipeline. Here we retrieve the labeled training data, split it
+    in k folds for cross-validation, and run k models' training process
+
+    Args:
+        learning_rate: float. initial learning rate for the optimization process
+        net_spec: tuple. Contains numbers of nodes in each layer. For single layer must be like (N,)
+        batch_size: int.
+        n_splits: int. number of splits for the kfold cross-validation process
+        lr_decay_period: int. Number of epochs before the learning rate becomes halved
+        epochs: int. Number of epochs for which to train the model
+        verbose: int. 0 for no verbosity, 1 prints progress for training process
+        random_state: None or int. If None, a random seed will be used for kfold process
+        staircase: boolean. Whether to use a staircase pattern for the learning rate decay
+
+    Returns:
+        A list of History objects. One for each kfold split
+    """
     
     X, y = get_data()
 
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
+    # will store the resulting histories of the training at each split
     results = []
     fold_n = 0
     for train_index, test_index in kf.split(X, y):
+        # for each split, run training and validation
+
         fold_n += 1
         if verbose:
             print(f"\nDoing fold {fold_n}.")
