@@ -152,6 +152,6 @@ if __name__ == "__main__":
     net_spec = (10,)
 
     results = run_cross_validation(learning_rate, net_spec, batch_size, n_splits=5,
-                                    lr_decay_period=5, epochs=30, verbose=0, random_state=None,
+                                    lr_decay_period=5, epochs=60, verbose=1, random_state=None,
                                     staircase=False)
     plot_figure(results, show=True)
