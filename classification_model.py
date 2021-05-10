@@ -90,6 +90,20 @@ def get_data():
 
 
 def get_model(n_categories, net_spec, learning_rate, steps_per_epoch, lr_decay_period=5, staircase=True):
+    """
+    Generates a sequential model with the provided parameters
+
+    Args:
+        n_categories: number of possible outcomes for the model to predict
+        net_spec: a tuple with the numbers of nodes in each layer. For single layer must be like (N,)
+        learning_rate: initial learning rate for the optimization process
+        steps_per_epoch: total steps taken in a single epoch
+        lr_decay_period: number of epochs before the learning rate becomes halved
+        staircase: boolean. Whether to use a staircase pattern for the learning rate decay
+
+    Returns:
+        A corresponding keras.Sequetial model
+    """
     
 
     model = keras.Sequential(
@@ -101,7 +115,7 @@ def get_model(n_categories, net_spec, learning_rate, steps_per_epoch, lr_decay_p
             layers.Dense(n_categories, activation='softmax', name='output_layer')
         ]
     )
-    # decay every 5 epochs
+    
     decay_steps = steps_per_epoch * lr_decay_period
     lr_schedule = ExponentialDecay(learning_rate, decay_steps=decay_steps, decay_rate=0.5, staircase=staircase)
     opt = keras.optimizers.Adam(learning_rate=lr_schedule)
