@@ -23,18 +23,34 @@ def normalize(x: pd.Series, offset: float=0, scale: float=0):
 
 
 def get_data():
+    """
+    Prepares the labeled data for the classification process
+
+    Returns:
+        tuple: (X, y)
+            X is a numpy array with X.shape = (n_samples, n_features)
+            y is a numpy array with y.shape = (n_samples, n_outcomes)
+    """
+
     if os.path.exists('data.p'):
+        # save some time when this has been previously computed
         with open('data.p', 'rb') as file:
             X, y = pickle.load(file)
         return X, y
 
+    # read data from disk
     tracks_df = pd.read_csv('tracks.csv').set_index('id')
+    artists_df = pd.read_csv('artists.csv')
     genres_data = pd.read_csv('data_by_genres_o.csv').set_index('genres')
+
+    # these are the features available in the dataset
     feature_names = genres_data.columns.tolist()
+
+    # extract feature data for tracks
     tracks_data = tracks_df.loc[:, feature_names]
 
+    # parse columns with lists written in string format
     string2list = lambda x: [s.replace("'", '') for s in re.findall('\'.*?\'', x)]
-    artists_df = pd.read_csv('artists.csv')
     artists_df['genres'] = artists_df.genres.apply(string2list)
     tracks_df['id_artists'] = tracks_df.id_artists.apply(string2list)
 
@@ -42,8 +58,9 @@ def get_data():
     # this list is taken from: https://www.statista.com/statistics/442354/music-genres-preferred-consumers-usa/
     genres_data = genres_data.loc[['rock', 'pop', 'country', 'hip hop', 'easy listening', 'jazz', 'blues', 'reggae', 'folk']]
 
+    # process features to make sure they are properly normalized
     for feature in feature_names:
-        if feature in ['duration_ms', 'instrumentalness', 'speechiness']:
+        if feature in ['duration_ms']:
             tracks_data[feature] = np.log(1 + tracks_data[feature])
             genres_data[feature] = np.log(1 + genres_data[feature])
         values = pd.concat([tracks_data[feature], genres_data[feature]])
@@ -51,6 +68,7 @@ def get_data():
         tracks_data[feature], _, _ = normalize(tracks_data[feature], offset=offset, scale=scale)
         genres_data[feature], _, _ = normalize(genres_data[feature], offset=offset, scale=scale)
 
+    # for each genre, find artists associated with it. Then match songs with its artists genre
     labels = pd.DataFrame()
     for genre in genres_data.index:
         find_artists = lambda x: genre in x
@@ -58,12 +76,13 @@ def get_data():
         match_genre = lambda x: any([art in artists_with_genre for art in x])
         labels[genre] = tracks_df.id_artists.apply(match_genre)
         print(f"{genre} has {labels[genre].sum()} tracks.")
-    mask = labels.any(axis=1)
 
     # we want to train on those rows for which we have at least one label
+    mask = labels.any(axis=1)
     X, y = tracks_data.loc[mask].values, labels.loc[mask].values
 
     if not os.path.exists('data.p'):
+        # save the computed data for future use
         with open('data.p', 'bw') as file:
             pickle.dump((X, y), file)
 
